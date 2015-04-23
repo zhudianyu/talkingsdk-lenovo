@@ -8,7 +8,40 @@ uploadArchives {
         pom.artifactId = 'talkingsdk-lenovo'
     }
 }
+task releaseCurJar(type: Copy) {  
+    from( 'build/intermediates/bundles/release')  
+    into( '../talkingsdk-lenovo-u3d-demo/Assets/Plugins/Android/libs')  
+    include('classes.jar')  
+    rename('classes.jar', 'talkingsdk-lenovo-2.3.2.1.jar')
+}
+task releaseCommonJar(type: Copy){
+    from( 'build/intermediates/exploded-aar/talkingsdk-env.projects/talkingsdk-u3d/unspecified')  
+    into( '../talkingsdk-lenovo-u3d-demo/Assets/Plugins/Android/libs')  
+    include('classes.jar')  
+    rename('classes.jar', 'talkingsdk-unity-0.1.jar')
+}
+task installApk(type:Exec, dependsOn: 'reJar') {
+    workingDir '../talkingsdk-lenovo-u3d-demo/'
+    commandLine 'Unity','-quit',' -batchmode','-executeMethod', 'CommandBuild.BuildAndroid','com.zqgame.hycs.uc','ucDemo','1.0.0','-logFile', 'test.log'
+    commandLine 'adb','install','-r','TalkingSdkU3dDemo.apk'
+}
 
+task reJar(type: Copy, dependsOn: 'build') {
+    from("../../libs/libs-lenovo"){
+        include 'libs/'
+        include 'res/'
+        include 'assets/'
+    }
+    from('build/intermediates/exploded-aar/talkingsdk-env.projects/talkingsdk-u3d/unspecified') {
+        rename 'classes.jar', 'libs/talkingsdk-u3d-0.5.jar'
+        include 'classes.jar'
+    }
+    from('build/intermediates/bundles/release') {
+        rename 'classes.jar', 'libs/talkingsdk-lenovo-2.3.2.1.jar'
+        include 'classes.jar'
+    }
+    into '../talkingsdk-lenovo-u3d-demo/Assets/Plugins/Android/'
+}
 buildscript {
     repositories {
         mavenCentral()
@@ -58,12 +91,11 @@ repositories {
 }
 dependencies {
     if ( System.getenv()["TSENV"] != "production" ) {
-        compile project(':projects:talkingsdk')
+        compile project(':projects:talkingsdk-u3d')
         compile project(':libs:libs-lenovo')
     } else {
         // use the correct version
         compile("com.talkingsdk:talking-lenovo:2.3.2.1")
-        compile("com.talkingsdk:talkingsdk:0.5")
-        compile("org.cocos2d-x:cocos2dx:2.1.5")
+        compile("com.talkingsdk:talkingsdk-u3d:0.6")
     }
 }

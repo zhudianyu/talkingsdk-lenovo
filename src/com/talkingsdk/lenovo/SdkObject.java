@@ -13,13 +13,16 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Message;
 
-import com.talkingsdk.Cocos2dxBaseActivity;
 import com.talkingsdk.MainApplication;
 import com.talkingsdk.SdkCommonObject;
 import com.talkingsdk.models.LoginData;
 import com.talkingsdk.models.PayData;
 
 import com.lenovo.lsf.gamesdk.LenovoGameApi;
+import android.telephony.CellLocation;     
+import android.telephony.PhoneStateListener;     
+import android.telephony.TelephonyManager; 
+import android.os.Build;
 
 import com.lenovo.lsf.gamesdk.LenovoGameApi.GamePayRequest;
 import com.lenovo.lsf.gamesdk.LenovoGameApi.IPayResult;
@@ -48,29 +51,28 @@ public abstract class SdkObject extends SdkCommonObject {
     private static final int MSG_GET_ORDER_ID_SUCCESS = 11;
     private static final int MAX_REQUEST_COUNT = 50;
     private String mlpsustdata;
-    
+    private StringBuffer buffer = new StringBuffer();
     private static final String hostUrl = "http://cashier.lenovomm.com:8085/";//"http://uss.test.lenovomm.cn/";//游戏服务器url
     
     @Override
     public void onActivityCreate(Activity parentActivity) {
         super.onActivityCreate(parentActivity);
         //如有初始化 可以写这里
- 
-        //SDK初始化
-    LenovoGameApi.doInit(getParentActivity(),appid);
-    
-    // 调用快速登录接口
-    /**
-       * 什么是快速登录：
-       * 如果用户已经在系统中登录，则本接口会通过SSO机制直接返回登录结果;
-       * 如果用户尚未在系统中登录，则本接口会通过后台短信方式进行自动登录尝试，通常需要10~20s左右时间;
-       * 由于自动登录需要发短信，因此请使用装有SIM卡的手机进行开发测试;
-       * 登录期间，会弹出一个提示框，提示用户正在尝试自动登录;
-       * 如果自动登录失败，会提示用户重试，以及引导用户使用其他方式登录。
-       */
-    //getTokenByQuickLogin();
-        
-    login();
+    //SDK初始化
+            LenovoGameApi.doInit(getParentActivity(),appid);
+            
+            // 调用快速登录接口
+            /**
+               * 什么是快速登录：
+               * 如果用户已经在系统中登录，则本接口会通过SSO机制直接返回登录结果;
+               * 如果用户尚未在系统中登录，则本接口会通过后台短信方式进行自动登录尝试，通常需要10~20s左右时间;
+               * 由于自动登录需要发短信，因此请使用装有SIM卡的手机进行开发测试;
+               * 登录期间，会弹出一个提示框，提示用户正在尝试自动登录;
+               * 如果自动登录失败，会提示用户重试，以及引导用户使用其他方式登录。
+               */
+            //getTokenByQuickLogin();
+   
+   
     }
 
     @Override
@@ -105,11 +107,9 @@ public abstract class SdkObject extends SdkCommonObject {
                 // 登录成功
                 // setContentView(R.layout.game_main);
                 // showView((String)msg.obj);
-                toastMakeText("登录成功");
-                Intent i2 = new Intent( getParentActivity(), GameActivity.class );
-                i2.putExtra( "from", "login" );
-                Log.d(TAG, "======登录成功=========");
-                getParentActivity().startActivity( i2 );
+                ld = new LoginData();
+                
+                onLoginedRequest(ld, 200);
                 break;
             }
         };
@@ -207,11 +207,26 @@ public abstract class SdkObject extends SdkCommonObject {
     }
 
     @Override
-    public void onApplicationCreate(Application obj) {
+    public void onApplicationStart(Application obj) {
     }
 
     @Override
-    public void onAppTerminate() {
+    public void onApplicationTerminate() {
+    }
+    //显示浮标
+    public void showToolBar()
+    {
+
+    }
+    //关闭浮标
+    public void destroyToolBar()
+    {
+
+    }
+    //显示用户中心
+    public void showUserCenter()
+    {
+        
     }
 
     @Override
@@ -241,7 +256,7 @@ public abstract class SdkObject extends SdkCommonObject {
     }
 
     public void onKeyBack() {
-        Cocos2dxBaseActivity.getInstance().runOnUiThread(new Runnable() {
+        getParentActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 LenovoGameApi.doQuit(getParentActivity(),  new IQuitCallback() {
